@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOCFL C1 華語文流利級備考系統 | 旗熠青版</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Sans TC, Noto Serif TC, Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        qiyi: {
+                            DEFAULT: '#2C6E73',
+                            dark: '#1F5256',
+                            light: '#4A9096',
+                            soft: '#EBF3F4',
+                            border: '#C5DDE0',
+                            muted: '#648E92'
+                        },
+                        paper: '#F8FAFC',
+                        ink: '#1E293B'
+                    },
+                    fontFamily: {
+                        sans: ['"Inter"', '"Noto Sans TC"', 'sans-serif'],
+                        serif: ['"Noto Serif TC"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Tùy chỉnh thanh cuộn thanh lịch */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94B8BC;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2C6E73;
+        }
+
+        /* Hiệu ứng lật thẻ Flashcard 3D */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+
+        /* Định dạng Chú âm (Ruby Annotation) */
+        ruby {
+            ruby-align: center;
+        }
+        rt {
+            font-size: 0.58em;
+            color: #2C6E73;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+        .hide-ruby rt {
+            display: none;
+        }
+
+        /* Highlight từ vựng trong bài đọc */
+        .c1-highlight {
+            background-color: #EBF3F4;
+            border-bottom: 2px solid #2C6E73;
+            color: #1F5256;
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .c1-highlight:hover, .c1-highlight.active {
+            background-color: #2C6E73;
+            color: #FFFFFF;
+        }
+        .c1-highlight:hover rt, .c1-highlight.active rt {
+            color: #EBF3F4;
+        }
+
+        /* Sóng âm thanh giả lập khi phát audio */
+        @keyframes soundwave {
+            0%, 100% { height: 6px; }
+            50% { height: 20px; }
+        }
+        .wave-bar {
+            animation: soundwave 0.9s ease-in-out infinite;
+        }
+        .wave-bar:nth-child(2) { animation-delay: 0.15s; }
+        .wave-bar:nth-child(3) { animation-delay: 0.3s; }
+        .wave-bar:nth-child(4) { animation-delay: 0.45s; }
+        .wave-bar:nth-child(5) { animation-delay: 0.2s; }
+    </style>
+</head>
+<body class="bg-paper text-ink font-sans antialiased selection:bg-qiyi selection:text-white min-h-screen flex flex-col">
+
+    <!-- Thông báo nổi (Toast Notification thay thế alert) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header & Thanh Tiến Độ -->
+    <header class="bg-white border-b border-qiyi-border sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between py-3.5 gap-3">
+                <!-- Thương hiệu -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-qiyi text-white flex items-center justify-center font-serif font-bold text-xl shadow-sm">
+                            流
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-lg sm:text-xl font-bold text-qiyi-dark tracking-tight">TOCFL C1 備考系統</h1>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-qiyi-soft text-qiyi border border-qiyi-border">流利級 Band C</span>
+                            </div>
+                            <p class="text-xs text-slate-500">旗熠青沉浸式華語學習 • 詞彙、時事、聽力與高階語法</p>
+                        </div>
+                    </div>
+
+                    <!-- Nút chọn giọng đọc nhanh trên mobile -->
+                    <button onclick="testTaiwanVoice()" class="md:hidden p-2 rounded-lg bg-qiyi-soft text-qiyi hover:bg-qiyi hover:text-white transition" title="Kiểm tra giọng đọc Đài Loan">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                </div>
+
+                <!-- Thanh tiến độ học tập & Cài đặt giọng đọc -->
+                <div class="flex flex-wrap items-center gap-4">
+                    <!-- Chọn giọng đọc zh-TW -->
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs">
+                        <i class="fa-solid fa-headset text-qiyi"></i>
+                        <span class="text-slate-500 hidden sm:inline">Giọng đọc:</span>
+                        <select id="voice-select" class="bg-transparent font-medium text-ink focus:outline-none max-w-[145px] truncate">
+                            <option value="">Đang tải giọng zh-TW...</option>
+                        </select>
+                    </div>
+
+                    <!-- Thanh tiến độ -->
+                    <div class="flex-1 md:w-56 bg-qiyi-soft/70 border border-qiyi-border rounded-xl px-3.5 py-2">
+                        <div class="flex justify-between items-center text-xs mb-1">
+                            <span class="font-medium text-qiyi-dark">Tiến độ C1</span>
+                            <span id="progress-text" class="font-bold text-qiyi">0% (0/0)</span>
+                        </div>
+                        <div class="w-full bg-white rounded-full h-2 overflow-hidden border border-qiyi-border/50">
+                            <div id="progress-bar" class="bg-qiyi h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thanh điều hướng Tabs -->
+            <nav class="flex overflow-x-auto no-scrollbar gap-1 sm:gap-2 pt-1 -mb-px" aria-label="Tabs">
+                <button onclick="switchTab('vocab')" id="tab-vocab" class="nav-tab active flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 border-qiyi text-qiyi whitespace-nowrap transition-all">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>1. 詞彙與成語 (Từ vựng & Thành ngữ)</span>
+                </button>
+                <button onclick="switchTab('reading')" id="tab-reading" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-qiyi whitespace-nowrap transition-all">
+                    <i class="fa-solid fa-newspaper"></i>
+                    <span>2. 深度閱讀與時事 (Đọc hiểu & Báo chí)</span>
+                </button>
+                <button onclick="switchTab('listening')" id="tab-listening" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-qiyi whitespace-nowrap transition-all">
+                    <i class="fa-solid fa-headphones-simple"></i>
+                    <span>3. C1 聽力特訓 (Luyện nghe)</span>
+                </button>
+                <button onclick="switchTab('grammar')" id="tab-grammar" class="nav-tab flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-qiyi whitespace-nowrap transition-all">
+                    <i class="fa-solid fa-pen-nib"></i>
+                    <span>4. 高階語法與造句 (Ngữ pháp & Đặt câu)</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Nội dung chính -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+        <!-- =====================================================================
+             TAB 1: KHO TỪ VỰNG, CỤM TỪ & THÀNH NGỮ C1
+             ===================================================================== -->
+        <section id="section-vocab" class="tab-section space-y-6">
+            <!-- Thanh công cụ lọc & Chế độ học -->
+            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-qiyi-border shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <!-- Bộ lọc chủ đề -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1">Chủ đề:</span>
+                    <button onclick="filterVocab('all')" class="vocab-filter-btn active px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-qiyi text-white transition" data-cat="all">Tất cả</button>
+                    <button onclick="filterVocab('成語')" class="vocab-filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-qiyi-soft text-qiyi-dark hover:bg-qiyi/15 transition" data-cat="成語">四字成語 (Thành ngữ)</button>
+                    <button onclick="filterVocab('慣用語')" class="vocab-filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-qiyi-soft text-qiyi-dark hover:bg-qiyi/15 transition" data-cat="慣用語">固定搭配/慣用語 (Cụm từ)</button>
+                    <button onclick="filterVocab('傳媒社會')" class="vocab-filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-qiyi-soft text-qiyi-dark hover:bg-qiyi/15 transition" data-cat="傳媒社會">傳媒與社會 (Truyền thông & Xã hội)</button>
+                    <button onclick="filterVocab('經濟文化')" class="vocab-filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-qiyi-soft text-qiyi-dark hover:bg-qiyi/15 transition" data-cat="經濟文化">經濟與文化 (Kinh tế & Văn hóa)</button>
+                </div>
+
+                <!-- Tìm kiếm & Chuyển chế độ Danh sách / Flashcard -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="relative flex-1 sm:w-56">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="vocab-search" oninput="renderVocabList()" placeholder="Tìm chữ Hán, Pinyin, nghĩa..." class="w-full pl-8 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-qiyi">
+                    </div>
+
+                    <div class="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+                        <button onclick="setVocabMode('grid')" id="btn-mode-grid" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-qiyi shadow-sm transition">
+                            <i class="fa-solid fa-table-cells-large mr-1"></i>Thẻ chi tiết
+                        </button>
+                        <button onclick="setVocabMode('flashcard')" id="btn-mode-flashcard" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-qiyi transition">
+                            <i class="fa-solid fa-clone mr-1"></i>Flashcard
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chế độ 1A: Lưới thẻ chi tiết -->
+            <div id="vocab-grid-container" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- Nội dung được render bằng JS -->
+            </div>
+
+            <!-- Chế độ 1B: Flashcard tương tác -->
+            <div id="vocab-flashcard-container" class="hidden max-w-2xl mx-auto py-4">
+                <div class="flex items-center justify-between mb-3 text-sm text-slate-500">
+                    <span id="fc-counter" class="font-semibold text-qiyi">Thẻ 1 / 12</span>
+                    <span class="text-xs bg-qiyi-soft text-qiyi px-2.5 py-1 rounded-lg">Nhấp vào thẻ để lật mặt sau</span>
+                </div>
+
+                <!-- Thẻ 3D -->
+                <div class="perspective-1000 w-full h-80 sm:h-96 cursor-pointer" onclick="flipFlashcard()">
+                    <div id="fc-inner" class="transform-style-3d relative w-full h-full">
+                        <!-- Mặt trước -->
+                        <div class="backface-hidden absolute inset-0 bg-white rounded-3xl border-2 border-qiyi-border shadow-md p-6 sm:p-8 flex flex-col items-center justify-center text-center">
+                            <span id="fc-category" class="px-3 py-1 rounded-full bg-qiyi-soft text-qiyi text-xs font-semibold mb-4">四字成語</span>
+                            <h2 id="fc-word" class="font-serif text-4xl sm:text-5xl font-bold text-ink tracking-wide mb-3">潛移默化</h2>
+                            <div class="flex items-center gap-3 text-qiyi font-medium text-base sm:text-lg mb-6">
+                                <span id="fc-zhuyin">ㄑㄧㄢˊ ㄧˊ ㄇㄛˋ ㄏㄨㄚˋ</span>
+                                <span class="text-slate-300">|</span>
+                                <span id="fc-pinyin">qián yí mò huà</span>
+                            </div>
+                            <button onclick="event.stopPropagation(); speakCurrentFlashcard()" class="px-4 py-2 rounded-full bg-qiyi text-white hover:bg-qiyi-dark transition flex items-center gap-2 text-sm shadow-sm">
+                                <i class="fa-solid fa-volume-high"></i> Nghe phát âm Đài Loan
+                            </button>
+                        </div>
+
+                        <!-- Mặt sau -->
+                        <div class="backface-hidden rotate-y-180 absolute inset-0 bg-qiyi-dark text-white rounded-3xl shadow-md p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-white/15 pb-3 mb-3">
+                                    <span id="fc-back-word" class="font-serif text-2xl font-bold">潛移默化</span>
+                                    <span id="fc-pos" class="text-xs bg-white/15 px-2.5 py-1 rounded-lg">成語 / 動詞性</span>
+                                </div>
+                                <p id="fc-meaning-vi" class="text-lg font-semibold text-amber-200 mb-1">Mưa dầm thấm lâu; ảnh hưởng một cách âm thầm, tự nhiên.</p>
+                                <p id="fc-meaning-zh" class="text-sm text-qiyi-soft mb-4">指人的思想或性格不知不覺受到感染、影響而發生了變化。</p>
+                                
+                                <div class="bg-white/10 rounded-xl p-3.5 text-sm space-y-1.5">
+                                    <div class="text-xs uppercase tracking-wider text-teal-200 font-semibold">Ngữ cảnh & Ví dụ:</div>
+                                    <p id="fc-example-zh" class="font-serif text-base leading-relaxed">家庭教育對孩子的價值觀有著潛移默化的深遠影響。</p>
+                                    <p id="fc-example-vi" class="text-xs text-slate-200 italic">Giáo dục gia đình có ảnh hưởng sâu sắc, mưa dầm thấm lâu đối với giá trị quan của trẻ.</p>
+                                </div>
+                            </div>
+                            <div class="text-center text-xs text-teal-200 pt-2">Nhấp lần nữa để quay lại mặt trước</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Điều hướng Flashcard -->
+                <div class="flex items-center justify-between gap-3 mt-6">
+                    <button onclick="prevFlashcard()" class="px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:border-qiyi hover:text-qiyi font-medium text-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-left"></i> Thẻ trước
+                    </button>
+
+                    <button id="fc-master-btn" onclick="toggleCurrentFlashcardMastered()" class="px-5 py-2.5 rounded-xl bg-qiyi-soft text-qiyi-dark border border-qiyi-border hover:bg-qiyi hover:text-white font-semibold text-sm transition flex items-center gap-2">
+                        <i class="fa-regular fa-circle-check"></i> Đánh dấu đã thuộc
+                    </button>
+
+                    <button onclick="nextFlashcard()" class="px-4 py-2.5 rounded-xl bg-qiyi text-white hover:bg-qiyi-dark font-medium text-sm transition flex items-center gap-2">
+                        Thẻ tiếp <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================================
+             TAB 2: ĐỌC HIỂU VĂN BẢN & THỜI SỰ ĐÀI LOAN
+             ===================================================================== -->
+        <section id="section-reading" class="tab-section hidden space-y-6">
+            <!-- Chọn bài báo thời sự -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="article-selector">
+                <!-- Render bằng JS -->
+            </div>
+
+            <!-- Khu vực đọc báo & Câu hỏi trắc nghiệm -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <!-- Cột trái (7 cột): Nội dung bài báo tương tác -->
+                <div class="lg:col-span-7 bg-white rounded-2xl border border-qiyi-border shadow-sm overflow-hidden">
+                    <!-- Header bài báo -->
+                    <div class="bg-qiyi-soft/60 border-b border-qiyi-border p-5 sm:p-6">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                            <div class="flex items-center gap-2">
+                                <span id="art-source" class="px-2.5 py-1 rounded-md bg-qiyi text-white text-xs font-semibold">中央社 CNA 專題</span>
+                                <span id="art-date" class="text-xs text-slate-500">時事社會 • 閱讀時間約 4 分鐘</span>
+                            </div>
+
+                            <!-- Công cụ hỗ trợ đọc -->
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleZhuyin()" id="btn-toggle-zhuyin" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-qiyi text-white transition">
+                                    注音: BẬT
+                                </button>
+                                <button onclick="readArticleAloud()" id="btn-read-article" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-qiyi-border text-qiyi hover:bg-qiyi hover:text-white transition flex items-center gap-1.5">
+                                    <i class="fa-solid fa-volume-high"></i> Đọc bài
+                                </button>
+                            </div>
+                        </div>
+
+                        <h2 id="art-title" class="font-serif text-xl sm:text-2xl font-bold text-ink leading-snug mb-2">
+                            演算法時代的媒體識讀：如何在資訊洪流中保持獨立思考？
+                        </h2>
+                        <p id="art-subtitle" class="text-xs sm:text-sm text-slate-600">
+                            Thời đại thuật toán và năng lực đọc hiểu truyền thông: Làm thế nào để giữ tư duy độc lập giữa dòng thác thông tin?
+                        </p>
+                    </div>
+
+                    <!-- Hướng dẫn nhỏ -->
+                    <div class="bg-amber-50/70 border-b border-amber-100 px-5 py-2.5 text-xs text-amber-900 flex items-center gap-2">
+                        <i class="fa-solid fa-lightbulb text-amber-600"></i>
+                        <span>Mẹo học C1: Nhấp vào các <strong class="text-qiyi underline">từ vựng/thành ngữ được tô sáng</strong> trong bài để xem giải nghĩa nhanh và cấu trúc đặt câu.</span>
+                    </div>
+
+                    <!-- Thân bài báo -->
+                    <div id="art-body" class="p-5 sm:p-7 font-serif text-lg sm:text-[19px] leading-[2.35] text-ink space-y-5">
+                        <!-- Render nội dung có ruby & highlight -->
+                    </div>
+
+                    <!-- Thẻ giải nghĩa nhanh từ vựng được nhấp trong bài -->
+                    <div id="art-vocab-popup" class="hidden mx-5 mb-6 p-4 rounded-xl bg-qiyi-soft border border-qiyi-border transition-all">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="flex items-center gap-2.5 mb-1">
+                                    <span id="pop-word" class="font-serif text-xl font-bold text-qiyi-dark"></span>
+                                    <span id="pop-zhuyin" class="text-xs font-medium text-qiyi bg-white px-2 py-0.5 rounded border border-qiyi-border"></span>
+                                    <span id="pop-pinyin" class="text-xs text-slate-500"></span>
+                                    <button onclick="speakPopupWord()" class="text-qiyi hover:text-qiyi-dark text-sm" title="Phát âm">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                </div>
+                                <p id="pop-meaning" class="text-sm font-semibold text-ink mb-1.5"></p>
+                                <p id="pop-usage" class="text-xs text-slate-600 bg-white/80 p-2.5 rounded-lg border border-qiyi-border/50"></p>
+                            </div>
+                            <button onclick="document.getElementById('art-vocab-popup').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 p-1">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải (5 cột): Bài tập Đọc hiểu chuẩn đề thi TOCFL C1 -->
+                <div class="lg:col-span-5 bg-white rounded-2xl border border-qiyi-border shadow-sm p-5 sm:p-6 space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div>
+                            <h3 class="font-bold text-base sm:text-lg text-qiyi-dark flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-question text-qiyi"></i>
+                                閱讀理解測驗 (Trắc nghiệm C1)
+                            </h3>
+                            <p class="text-xs text-slate-500">Mô phỏng dạng câu hỏi suy luận & tìm ý chính TOCFL Band C</p>
+                        </div>
+                    </div>
+
+                    <div id="art-questions-container" class="space-y-6">
+                        <!-- Render câu hỏi bằng JS -->
+                    </div>
+
+                    <button onclick="checkReadingAnswers()" class="w-full py-3 rounded-xl bg-qiyi hover:bg-qiyi-dark text-white font-semibold text-sm shadow-sm transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check-double"></i> Kiểm tra đáp án & Xem giải thích
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================================
+             TAB 3: LUYỆN NGHE TRÌNH ĐỘ C1 (C1 聽力特訓)
+             ===================================================================== -->
+        <section id="section-listening" class="tab-section hidden space-y-6">
+            <!-- Chọn bài nghe -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="listening-selector">
+                <!-- Render bằng JS -->
+            </div>
+
+            <!-- Trình phát & Bài tập nghe hiểu -->
+            <div class="bg-white rounded-2xl border border-qiyi-border shadow-sm overflow-hidden">
+                <!-- Trình điều khiển Audio Đài Loan -->
+                <div class="bg-gradient-to-r from-qiyi-dark to-qiyi text-white p-6 sm:p-7">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div class="space-y-2 max-w-2xl">
+                            <div class="flex items-center gap-2">
+                                <span id="lis-badge" class="px-2.5 py-0.5 rounded-full bg-white/20 text-xs font-semibold">新聞播報 • Bản tin thời sự</span>
+                                <span class="text-xs text-teal-200">語速與語調：標準臺灣華語</span>
+                            </div>
+                            <h2 id="lis-title" class="font-serif text-xl sm:text-2xl font-bold">臺灣半導體產業的綠色轉型與永續挑戰</h2>
+                            <p id="lis-desc" class="text-xs sm:text-sm text-teal-100">Chuyển đổi xanh và thách thức phát triển bền vững của ngành công nghiệp bán dẫn Đài Loan.</p>
+                        </div>
+
+                        <!-- Bộ điều khiển phát -->
+                        <div class="flex flex-wrap items-center gap-3 bg-white/10 backdrop-blur-sm p-3.5 rounded-2xl border border-white/15">
+                            <button onclick="togglePlayListening()" id="btn-play-listening" class="w-12 h-12 rounded-xl bg-white text-qiyi-dark hover:bg-qiyi-soft flex items-center justify-center text-lg shadow-md transition">
+                                <i class="fa-solid fa-play"></i>
+                            </button>
+
+                            <button onclick="stopListening()" class="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 text-white flex items-center justify-center text-sm transition" title="Dừng hẳn">
+                                <i class="fa-solid fa-stop"></i>
+                            </button>
+
+                            <!-- Tốc độ đọc -->
+                            <div class="flex items-center gap-1 bg-black/20 rounded-xl p-1 text-xs">
+                                <button onclick="setSpeechRate(0.8)" class="rate-btn px-2.5 py-1.5 rounded-lg text-teal-100 hover:text-white transition" data-rate="0.8">0.8x</button>
+                                <button onclick="setSpeechRate(1.0)" class="rate-btn active px-2.5 py-1.5 rounded-lg bg-white text-qiyi-dark font-bold transition" data-rate="1.0">1.0x</button>
+                                <button onclick="setSpeechRate(1.2)" class="rate-btn px-2.5 py-1.5 rounded-lg text-teal-100 hover:text-white transition" data-rate="1.2">1.2x</button>
+                            </div>
+
+                            <!-- Sóng âm hiển thị trạng thái đang đọc -->
+                            <div id="audio-wave" class="hidden items-center gap-1 px-2 h-6">
+                                <span class="wave-bar w-1 bg-amber-300 rounded-full"></span>
+                                <span class="wave-bar w-1 bg-amber-300 rounded-full"></span>
+                                <span class="wave-bar w-1 bg-amber-300 rounded-full"></span>
+                                <span class="wave-bar w-1 bg-amber-300 rounded-full"></span>
+                                <span class="wave-bar w-1 bg-amber-300 rounded-full"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nội dung bài tập nghe & Transcript -->
+                <div class="p-6 sm:p-7 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <!-- Cột trái: Câu hỏi nghe hiểu -->
+                    <div class="lg:col-span-7 space-y-5">
+                        <h3 class="font-bold text-base sm:text-lg text-qiyi-dark flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <i class="fa-solid fa-ear-listen text-qiyi"></i>
+                            聽力測驗題目 (Câu hỏi nghe hiểu)
+                        </h3>
+
+                        <div id="lis-questions-container" class="space-y-5">
+                            <!-- Render bằng JS -->
+                        </div>
+
+                        <button onclick="checkListeningAnswers()" class="px-6 py-3 rounded-xl bg-qiyi hover:bg-qiyi-dark text-white font-semibold text-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-check-circle"></i> Chấm điểm bài nghe
+                        </button>
+                    </div>
+
+                    <!-- Cột phải: Transcript & Từ khóa nghe hiểu -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="bg-slate-50 rounded-2xl border border-slate-200 p-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-bold text-sm text-qiyi-dark flex items-center gap-2">
+                                    <i class="fa-solid fa-file-lines text-qiyi"></i>
+                                    聽力逐字稿 (Bản chép lời)
+                                </h4>
+                                <button onclick="toggleTranscript()" id="btn-toggle-transcript" class="px-3 py-1 rounded-lg bg-qiyi-soft text-qiyi text-xs font-semibold hover:bg-qiyi hover:text-white transition">
+                                    <i class="fa-regular fa-eye mr-1"></i> Hiện逐字稿
+                                </button>
+                            </div>
+
+                            <div id="lis-transcript-box" class="hidden space-y-3 pt-2 border-t border-slate-200">
+                                <p id="lis-transcript-zh" class="font-serif text-base leading-loose text-ink bg-white p-4 rounded-xl border border-slate-200"></p>
+                                <p id="lis-transcript-vi" class="text-xs text-slate-600 leading-relaxed italic"></p>
+                            </div>
+                            <div id="lis-transcript-placeholder" class="text-xs text-slate-500 py-6 text-center">
+                                Hãy thử nghe ít nhất 1-2 lần và trả lời câu hỏi trước khi mở bản chép lời để đạt hiệu quả luyện thi C1 tốt nhất.
+                            </div>
+                        </div>
+
+                        <!-- Từ khóa trọng tâm trong bài nghe -->
+                        <div class="bg-qiyi-soft/50 rounded-2xl border border-qiyi-border p-5">
+                            <h4 class="font-bold text-sm text-qiyi-dark mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-key text-qiyi"></i>
+                                聽力關鍵詞彙 (Từ khóa trọng tâm)
+                            </h4>
+                            <div id="lis-keywords" class="space-y-2.5">
+                                <!-- Render bằng JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =====================================================================
+             TAB 4: PHÂN TÍCH NGỮ PHÁP & LUYỆN ĐẶT CÂU
+             ===================================================================== -->
+        <section id="section-grammar" class="tab-section hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Danh sách cấu trúc ngữ pháp C1 (7 cột) -->
+                <div class="lg:col-span-7 space-y-4" id="grammar-list-container">
+                    <!-- Render bằng JS -->
+                </div>
+
+                <!-- Khu vực Luyện đặt câu tương tác (5 cột) -->
+                <div class="lg:col-span-5">
+                    <div class="bg-white rounded-2xl border border-qiyi-border shadow-sm p-5 sm:p-6 sticky top-28 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div>
+                                <h3 class="font-bold text-base sm:text-lg text-qiyi-dark flex items-center gap-2">
+                                    <i class="fa-solid fa-pen-to-square text-qiyi"></i>
+                                    造句實戰練習 (Thực hành đặt câu)
+                                </h3>
+                                <p class="text-xs text-slate-500">Vận dụng cấu trúc & từ vựng C1 vào ngữ cảnh thực tế</p>
+                            </div>
+                            <button onclick="nextSentencePrompt()" class="px-3 py-1.5 rounded-lg bg-qiyi-soft text-qiyi text-xs font-semibold hover:bg-qiyi hover:text-white transition">
+                                Đổi đề bài <i class="fa-solid fa-rotate ml-1"></i>
+                            </button>
+                        </div>
+
+                        <!-- Đề bài đặt câu -->
+                        <div class="bg-qiyi-soft/70 border border-qiyi-border rounded-xl p-4 space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold uppercase tracking-wider text-qiyi">Đề bài thực hành</span>
+                                <span id="prompt-level" class="text-xs bg-white text-qiyi-dark px-2 py-0.5 rounded border border-qiyi-border font-medium">書面語 • Văn viết</span>
+                            </div>
+                            <p id="prompt-task" class="text-sm font-medium text-ink">
+                                Hãy viết một câu nhận xét về tác động của trí tuệ nhân tạo (AI) đối với thị trường lao động, sử dụng cấu trúc:
+                            </p>
+                            <div class="flex flex-wrap gap-2 pt-1" id="prompt-tags">
+                                <span class="px-2.5 py-1 rounded-lg bg-qiyi text-white font-serif text-sm font-bold">固然……，然而……</span>
+                                <span class="px-2.5 py-1 rounded-lg bg-white text-qiyi-dark border border-qiyi-border font-serif text-sm">未雨綢繆</span>
+                            </div>
+                        </div>
+
+                        <!-- Ô nhập câu trả lời -->
+                        <div>
+                            <label for="user-sentence-input" class="block text-xs font-semibold text-slate-600 mb-1.5">Câu tiếng Trung Phồn thể của bạn:</label>
+                            <textarea id="user-sentence-input" rows="3" placeholder="請在此輸入您的繁體中文造句..." class="w-full rounded-xl border border-slate-300 p-3.5 font-serif text-base text-ink focus:outline-none focus:border-qiyi focus:ring-2 focus:ring-qiyi/20"></textarea>
+                        </div>
+
+                        <!-- Nút hành động -->
+                        <div class="flex items-center gap-3">
+                            <button onclick="evaluateUserSentence()" class="flex-1 py-2.5 rounded-xl bg-qiyi hover:bg-qiyi-dark text-white font-semibold text-sm transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Kiểm tra & Đối chiếu câu mẫu
+                            </button>
+                            <button onclick="speakUserSentence()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition" title="Nghe đọc thử câu bạn viết">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                        </div>
+
+                        <!-- Kết quả đối chiếu & Câu mẫu -->
+                        <div id="sentence-feedback-box" class="hidden rounded-xl border border-qiyi-border bg-slate-50 p-4 space-y-3">
+                            <div id="sentence-check-status" class="text-xs font-semibold"></div>
+                            <div class="border-t border-slate-200 pt-2.5 space-y-1.5">
+                                <div class="text-xs font-bold text-qiyi-dark flex items-center justify-between">
+                                    <span>參考範句 (Câu mẫu chuẩn C1):</span>
+                                    <button onclick="speakSampleSentence()" class="text-qiyi hover:underline font-normal">
+                                        <i class="fa-solid fa-volume-high mr-1"></i>Nghe câu mẫu
+                                    </button>
+                                </div>
+                                <p id="prompt-sample-zh" class="font-serif text-base text-ink bg-white p-3 rounded-lg border border-slate-200 leading-relaxed"></p>
+                                <p id="prompt-sample-vi" class="text-xs text-slate-600 italic"></p>
+                                <p id="prompt-note" class="text-xs text-qiyi-dark bg-qiyi-soft/60 p-2.5 rounded-lg"></p>
+                            </div>
+                        </div>
+
+                        <!-- Lịch sử câu đã lưu -->
+                        <div class="pt-2 border-t border-slate-100">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-slate-500">Sổ tay câu bạn đã đặt (<span id="saved-sentences-count">0</span>)</span>
+                            </div>
+                            <div id="saved-sentences-list" class="space-y-2 max-h-40 overflow-y-auto text-xs">
+                                <p class="text-slate-400 italic">Chưa có câu nào được lưu.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer tối giản -->
+    <footer class="bg-white border-t border-slate-200 py-5 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-qiyi inline-block"></span>
+                <span><strong>TOCFL C1 華語文流利級備考系統</strong> — Thiết kế giao diện sắc màu 旗熠青 (#2C6E73)</span>
+            </div>
+            <div>Sử dụng công nghệ phát âm Web Speech API (zh-TW) • Lưu trữ tiến độ tự động trên trình duyệt</div>
+        </div>
+    </footer>
+
+    <!-- =====================================================================
+         DỮ LIỆU HỌC TẬP TOCFL C1 & LOGIC TƯƠNG TÁC
+         ===================================================================== -->
+    <script>
+        // 1. KHO DỮ LIỆU TỪ VỰNG, CỤM TỪ CỐ ĐỊNH & THÀNH NGỮ TOCFL C1
+        const VOCAB_DATA = [
+            {
+                id: 'v1',
+                word: '潛移默化',
+                zhuyin: 'ㄑㄧㄢˊ ㄧˊ ㄇㄛˋ ㄏㄨㄚˋ',
+                pinyin: 'qián yí mò huà',
+                category: '成語',
+                pos: '成語 (動詞性)',
+                meaningVi: 'Mưa dầm thấm lâu; ảnh hưởng, cảm hóa một cách âm thầm, tự nhiên.',
+                meaningZh: '指人的思想或性格不知不覺受到感染、影響而發生了變化。',
+                grammarNote: 'Thường dùng làm định ngữ (潛移默化的影響) hoặc vị ngữ.',
+                exampleZh: '閱讀經典文學作品，能夠在無形中對年輕人的思維產生潛移默化的影響。',
+                exampleVi: 'Việc đọc các tác phẩm văn học kinh điển có thể tạo ra ảnh hưởng âm thầm, sâu sắc lên tư duy của giới trẻ.'
+            },
+            {
+                id: 'v2',
+                word: '未雨綢繆',
+                zhuyin: 'ㄨㄟˋ ㄩˇ ㄔㄡˊ ㄇㄡˊ',
+                pinyin: 'wèi yǔ chóu móu',
+                category: '成語',
+                pos: '成語 (動詞性)',
+                meaningVi: 'Lo xa, chuẩn bị phòng ngừa trước khi rủi ro/khó khăn xảy ra.',
+                meaningZh: '天還沒下雨，先把門窗綁牢。比喻事先做好準備工作，防患於未然。',
+                grammarNote: 'Thường đi sau các phó từ chỉ sự chủ động như 必須、及早、事先.',
+                exampleZh: '面對高齡化社會帶來的勞動力短缺，政府與企業必須及早未雨綢繆。',
+                exampleVi: 'Trước tình trạng thiếu hụt lao động do xã hội già hóa, chính phủ và doanh nghiệp phải sớm có sự chuẩn bị lo xa.'
+            },
+            {
+                id: 'v3',
+                word: '循序漸進',
+                zhuyin: 'ㄒㄩㄣˊ ㄒㄩˋ ㄐㄧㄢˋ ㄐㄧㄣˋ',
+                pinyin: 'xún xù jiàn jìn',
+                category: '成語',
+                pos: '成語 (副詞/動詞性)',
+                meaningVi: 'Tuần tự từng bước một, tiến lên theo đúng trình tự hợp lý.',
+                meaningZh: '依照一定的次序逐步推進。常用於學習、工作或改革過程。',
+                grammarNote: 'Thường làm trạng ngữ: 循序漸進地 + Động từ.',
+                exampleZh: '語言學習沒有捷徑，唯有循序漸進地累積詞彙與語感，才能達到流利級水準。',
+                exampleVi: 'Học ngoại ngữ không có đường tắt, chỉ có tích lũy từ vựng và cảm quan ngôn ngữ tuần tự từng bước mới đạt trình độ lưu loát.'
+            },
+            {
+                id: 'v4',
+                word: '首當其衝',
+                zhuyin: 'ㄕㄡˇ ㄉㄤ ㄑㄧˊ ㄔㄨㄥ',
+                pinyin: 'shǒu dāng qí chōng',
+                category: '成語',
+                pos: '成語 (動詞性)',
+                meaningVi: 'Chịu ảnh hưởng đầu tiên và trực tiếp nhất (khi có biến cố/khó khăn).',
+                meaningZh: '比喻最先受到攻擊或遭遇災難、衝擊。注意：非「首屈一指」之意。',
+                grammarNote: 'Thường dùng trong báo chí kinh tế, xã hội. Chủ ngữ là đối tượng chịu thiệt hại/tác động trước tiên.',
+                exampleZh: '全球供應鏈重組之際，高度依賴出口的傳統製造業往往首當其衝。',
+                exampleVi: 'Trong bối cảnh tái cấu trúc chuỗi cung ứng toàn cầu, các ngành sản xuất truyền thống phụ thuộc cao vào xuất khẩu thường chịu tác động đầu tiên.'
+            },
+            {
+                id: 'v5',
+                word: '息息相關',
+                zhuyin: 'ㄒㄧˊ ㄒㄧˊ ㄒㄧㄤ ㄍㄨㄢ',
+                pinyin: 'xí xí xiāng guān',
+                category: '成語',
+                pos: '成語 (形容詞性)',
+                meaningVi: 'Có mối quan hệ mật thiết, gắn bó chặt chẽ như hơi thở với nhau.',
+                meaningZh: '呼吸也相互關聯。形容彼此的關係非常密切。',
+                grammarNote: 'Cấu trúc cố định: A 與 B 息息相關.',
+                exampleZh: '能源轉型不僅是環保議題，更與國家經濟競爭力息息相關。',
+                exampleVi: 'Chuyển dịch năng lượng không chỉ là vấn đề bảo vệ môi trường, mà còn gắn bó mật thiết với năng lực cạnh tranh kinh tế quốc gia.'
+            },
+            {
+                id: 'v6',
+                word: '不言而喻',
+                zhuyin: 'ㄅㄨˋ ㄧㄢˊ ㄦˊ ㄩˋ',
+                pinyin: 'bù yán ér yù',
+                category: '成語',
+                pos: '成語 (形容詞性)',
+                meaningVi: 'Không cần nói cũng tự hiểu, điều hiển nhiên rõ ràng.',
+                meaningZh: '不用說話就能明白。形容道理很明顯。',
+                grammarNote: 'Thường dùng ở cuối mệnh đề: ……的重要性不言而喻。',
+                exampleZh: '在資訊爆炸的時代，培養獨立思考與媒體識讀能力的重要性不言而喻。',
+                exampleVi: 'Trong thời đại bùng nổ thông tin, tầm quan trọng của việc rèn luyện tư duy độc lập và năng lực đọc hiểu truyền thông là điều hiển nhiên.'
+            },
+            {
+                id: 'v7',
+                word: '同溫層',
+                zhuyin: 'ㄊㄨㄥˊ ㄨㄣ ㄘㄥˊ',
+                pinyin: 'tóng wēn céng',
+                category: '傳媒社會',
+                pos: '名詞 (社會/網路用語)',
+                meaningVi: 'Buồng vang thông tin / Vùng đồng điệu (nhóm người cùng quan điểm trên mạng xã hội).',
+                meaningZh: '原指大氣層中的平流層，現多比喻社群媒體上想法相近的人聚集在一起，形成封閉的資訊環境。',
+                grammarNote: 'Cụm từ đi kèm: 打破同溫層 (phá vỡ vùng đồng điệu), 同溫層效應 (hiệu ứng buồng vang).',
+                exampleZh: '演算法會不斷推播我們喜歡的內容，久而久之便容易讓人困在同溫層裡。',
+                exampleVi: 'Thuật toán liên tục đề xuất nội dung chúng ta thích, lâu dần dễ khiến con người bị mắc kẹt trong buồng vang thông tin.'
+            },
+            {
+                id: 'v8',
+                word: '媒體識讀',
+                zhuyin: 'ㄇㄟˊ ㄊㄧˇ ㄕˋ ㄉㄨˊ',
+                pinyin: 'méi tǐ shì dú',
+                category: '傳媒社會',
+                pos: '名詞片語 (教育/傳播)',
+                meaningVi: 'Năng lực tiếp nhận và phân tích truyền thông (Media Literacy).',
+                meaningZh: '指閱聽人對各種媒體訊息進行解讀、分析、評估與思辨的能力。',
+                grammarNote: 'Cụm từ hay gặp trong đề thi TOCFL C1: 提升媒體識讀能力, 媒體識讀素養.',
+                exampleZh: '面對層出不窮的假訊息，臺灣近年來積極將媒體識讀納入學校核心課程。',
+                exampleVi: 'Trước tình trạng tin giả xuất hiện dồn dập, những năm gần đây Đài Loan tích cực đưa năng lực đọc hiểu truyền thông vào chương trình cốt lõi ở trường học.'
+            },
+            {
+                id: 'v9',
+                word: '供不應求',
+                zhuyin: 'ㄍㄨㄥ ㄅㄨˋ ㄧㄥˋ ㄑㄧㄡˊ',
+                pinyin: 'gōng bù yìng qiú',
+                category: '經濟文化',
+                pos: '成語/經濟術語',
+                meaningVi: 'Cung không đủ cầu.',
+                meaningZh: '供應不能滿足需求。',
+                grammarNote: 'Trái nghĩa: 供過於求 (Cung vượt cầu). Thường dùng mô tả thị trường chip, nhà ở, nhân lực.',
+                exampleZh: '隨著人工智慧應用快速擴張，高階晶片市場長期處於供不應求的狀態。',
+                exampleVi: 'Cùng với sự mở rộng nhanh chóng của các ứng dụng trí tuệ nhân tạo, thị trường chip cao cấp luôn trong tình trạng cung không đủ cầu.'
+            },
+            {
+                id: 'v10',
+                word: '從長計議',
+                zhuyin: 'ㄘㄨㄥˊ ㄔㄤˊ ㄐㄧˋ ㄧˋ',
+                pinyin: 'cóng cháng jì yì',
+                category: '慣用語',
+                pos: '慣用語 (動詞性)',
+                meaningVi: 'Bàn bạc tính toán lâu dài, cân nhắc kỹ lưỡng chứ không vội vàng.',
+                meaningZh: '用較長的時間慎重考慮、仔細商量，不急於一時做出決定。',
+                grammarNote: 'Thường dùng: 這件事還需從長計議 (Chuyện này còn cần bàn tính lâu dài).',
+                exampleZh: '企業轉型牽涉到龐大的資金與人力調度，切忌草率行事，必須從長計議。',
+                exampleVi: 'Chuyển đổi doanh nghiệp liên quan đến nguồn vốn và điều phối nhân lực khổng lồ, tối kỵ làm qua loa, nhất định phải bàn tính lâu dài.'
+            },
+            {
+                id: 'v11',
+                word: '煞費苦心',
+                zhuyin: 'ㄕㄚˋ ㄈㄟˋ ㄎㄨˇ ㄒㄧㄣ',
+                pinyin: 'shà fèi kǔ xīn',
+                category: '慣用語',
+                pos: '慣用語 (動詞性)',
+                meaningVi: 'Tốn bao tâm sức, vắt óc suy nghĩ kỹ lưỡng.',
+                meaningZh: '形容費盡心思、耗費極大精力去思考或安排某事。',
+                grammarNote: 'Thường đi với 為了……而煞費苦心.',
+                exampleZh: '策展團隊為了讓歷史文物貼近現代觀眾，在互動設計上可說是煞費苦心。',
+                exampleVi: 'Đội ngũ giám tuyển triển lãm để đưa hiện vật lịch sử đến gần khán giả hiện đại có thể nói là đã tốn bao tâm sức vào thiết kế tương tác.'
+            },
+            {
+                id: 'v12',
+                word: '永續發展',
+                zhuyin: 'ㄩㄥˇ ㄒㄩˋ ㄈㄚ ㄓㄢˇ',
+                pinyin: 'yǒng xù fā zhǎn',
+                category: '經濟文化',
+                pos: '名詞片語 (臺灣標準譯詞)',
+                meaningVi: 'Phát triển bền vững (Sustainable Development - thuật ngữ chuẩn Đài Loan).',
+                meaningZh: '在滿足當代需求的同時，不損害後代子孫滿足其需求之能力的發展模式。',
+                grammarNote: 'Lưu ý: Đài Loan dùng 永續發展 (khác với 可持續發展 ở đại lục).',
+                exampleZh: '越來越多跨國企業將ESG與永續發展指標視為評估合作夥伴的重要依據。',
+                exampleVi: 'Ngày càng nhiều tập đoàn đa quốc gia xem chỉ số ESG và phát triển bền vững là căn cứ quan trọng để đánh giá đối tác.'
+            }
+        ];
+
+        // 2. DỮ LIỆU BÀI BÁO THỜI SỰ ĐÀI LOAN (ĐỌC HIỂU C1)
+        const ARTICLES_DATA = [
+            {
+                id: 'art1',
+                source: '中央社 CNA 深度專題',
+                tag: '傳媒與科技',
+                title: '演算法時代的媒體識讀：如何在資訊洪流中保持獨立思考？',
+                subtitle: 'Thời đại thuật toán và năng lực đọc hiểu truyền thông: Làm thế nào giữ tư duy độc lập giữa dòng thác thông tin?',
+                readTime: '4 分鐘',
+                paragraphs: [
+                    [
+                        { text: '在社群媒體高度普及的今日，演算法依據使用者的瀏覽紀錄精準推播內容，雖然大幅提升了獲取資訊的便利性，卻也無形中構築了一道道看不見的「' },
+                        { text: '同溫層', zhuyin: 'ㄊㄨㄥˊ ㄨㄣ ㄘㄥˊ', pinyin: 'tóng wēn céng', highlight: true, meaning: 'Buồng vang thông tin (môi trường chỉ tiếp nhận quan điểm tương đồng)', usage: 'Ví dụ: 演算法容易讓人困在同溫層裡。' },
+                        { text: '」。當人們長期只接觸與自身立場相符的觀點時，不僅容易產生認知偏誤，更可能削弱對多元意見的包容度。' }
+                    ],
+                    [
+                        { text: '此外，隨著生成式人工智慧技術日趨成熟，真假難辨的深偽影像與偏頗報導層出不窮，對社會信任造成了嚴峻考驗。在這樣的背景下，培養公民的「' },
+                        { text: '媒體識讀', zhuyin: 'ㄇㄟˊ ㄊㄧˇ ㄕˋ ㄉㄨˊ', pinyin: 'méi tǐ shì dú', highlight: true, meaning: 'Năng lực đọc hiểu, phân tích và phản biện thông tin truyền thông', usage: 'Cụm từ C1: 媒體識讀素養 (Tố chất đọc hiểu truyền thông).' },
+                        { text: '」能力，其重要性可謂' },
+                        { text: '不言而喻', zhuyin: 'ㄅㄨˋ ㄧㄢˊ ㄦˊ ㄩˋ', pinyin: 'bù yán ér yù', highlight: true, meaning: 'Không cần nói cũng tự hiểu, điều hiển nhiên rõ ràng', usage: 'Cấu trúc: ……的重要性不言而喻。' },
+                        { text: '。' }
+                    ],
+                    [
+                        { text: '專家指出，面對龐雜的網路訊息，閱聽人應養成查證來源與交叉比對的習慣，而非盲目轉發。唯有透過教育' },
+                        { text: '潛移默化', zhuyin: 'ㄑㄧㄢˊ ㄧˊ ㄇㄛˋ ㄏㄨㄚˋ', pinyin: 'qián yí mò huà', highlight: true, meaning: 'Mưa dầm thấm lâu, ảnh hưởng một cách âm thầm tự nhiên', usage: 'Cụm từ: 潛移默化的影響。' },
+                        { text: '地引導大眾建立批判性思維，我們才能在真偽交織的資訊洪流中站穩腳跟，做出理性判斷。' }
+                    ]
+                ],
+                questions: [
+                    {
+                        q: '1. 根據本文，社群媒體的「演算法」會帶來什麼負面影響？',
+                        options: [
+                            'A. 降低使用者搜尋日常新聞的速度與便利性',
+                            'B. 使人長期處於立場相似的環境，進而限縮視野與包容度',
+                            'C. 導致傳統紙本報紙完全失去存在的價值',
+                            'D. 讓所有網路使用者都具備相同的批判性思維'
+                        ],
+                        answer: 1,
+                        explanation: 'Đoạn 1 nêu rõ: Thuật toán tạo ra các "同溫層" (buồng vang thông tin), khiến người dùng chỉ tiếp xúc quan điểm giống mình, dễ nảy sinh thiên kiến nhận thức và làm giảm sự bao dung với ý kiến đa chiều.'
+                    },
+                    {
+                        q: '2. 作者認為在生成式AI普及的時代，閱聽人應該採取何種態度？',
+                        options: [
+                            'A. 全面拒絕使用社群媒體與人工智慧工具',
+                            'B. 看到聳動的新聞標題時應立即轉發提醒親友',
+                            'C. 查證資訊來源並交叉比對，培養獨立思辨能力',
+                            'D. 完全依賴政府機構替民眾過濾所有網路文章'
+                        ],
+                        answer: 2,
+                        explanation: 'Đoạn 3 chỉ ra người tiếp nhận thông tin (閱聽人) nên hình thành thói quen kiểm chứng nguồn tin (查證來源) và đối chiếu chéo (交叉比對) thay vì chia sẻ mù quáng.'
+                    }
+                ]
+            },
+            {
+                id: 'art2',
+                source: '天下雜誌 經濟評論',
+                tag: '人口與經濟',
+                title: '少子化與高齡化雙重夾擊：臺灣產業如何啟動人才轉型？',
+                subtitle: 'Gọng kìm kép giảm tỷ lệ sinh và già hóa dân số: Doanh nghiệp Đài Loan tái cấu trúc nhân lực ra sao?',
+                readTime: '5 分鐘',
+                paragraphs: [
+                    [
+                        { text: '近年來，臺灣人口結構快速變遷，少子化與高齡化的趨勢日益嚴峻，勞動人口逐年萎縮已是不爭的事實。在這波人口轉型的浪潮中，仰賴密集人力的服務業與傳統製造業往往' },
+                        { text: '首當其衝', zhuyin: 'ㄕㄡˇ ㄉㄤ ㄑㄧˊ ㄔㄨㄥ', pinyin: 'shǒu dāng qí chōng', highlight: true, meaning: 'Chịu ảnh hưởng đầu tiên và trực tiếp nhất', usage: 'Thường dùng trong báo chí kinh tế chỉ đối tượng chịu tác động trước tiên.' },
+                        { text: '，面臨前所未有的缺工困境。' }
+                    ],
+                    [
+                        { text: '面對結構性的勞動力短缺，企業若僅靠短期調薪已難以治本，必須及早' },
+                        { text: '未雨綢繆', zhuyin: 'ㄨㄟˋ ㄩˇ ㄔㄡˊ ㄇㄡˊ', pinyin: 'wèi yǔ chóu móu', highlight: true, meaning: 'Lo xa, chuẩn bị phòng ngừa trước khi khó khăn xảy ra', usage: 'Ví dụ: 政府與企業必須及早未雨綢繆。' },
+                        { text: '，從自動化設備導入、中高齡人力再運用，以及延攬國際專業人才等多管齊下。' }
+                    ],
+                    [
+                        { text: '同時，勞動環境的友善程度與企業的' },
+                        { text: '永續發展', zhuyin: 'ㄩㄥˇ ㄒㄩˋ ㄈㄚ ㄓㄢˇ', pinyin: 'yǒng xù fā zhǎn', highlight: true, meaning: 'Phát triển bền vững (thuật ngữ chuẩn Đài Loan)', usage: 'Cụm từ: 企業永續發展指標。' },
+                        { text: '理念，也與留才成效' },
+                        { text: '息息相關', zhuyin: 'ㄒㄧˊ ㄒㄧˊ ㄒㄧㄤ ㄍㄨㄢ', pinyin: 'xí xí xiāng guān', highlight: true, meaning: 'Có mối quan hệ mật thiết, gắn bó chặt chẽ với nhau', usage: 'Cấu trúc: A 與 B 息息相關。' },
+                        { text: '。唯有營造具包容性與成長空間的職場，才能在人才爭奪戰中脫穎而出。' }
+                    ]
+                ],
+                questions: [
+                    {
+                        q: '1. 根據文章內容，下列哪一項敘述最符合目前臺灣產業面臨的現況？',
+                        options: [
+                            'A. 高科技業完全不受人口結構變化的任何影響',
+                            'B. 傳統製造業與服務業最先感受到缺工帶來的衝擊',
+                            'C. 只要提高起薪就能徹底解決所有企業的勞動力短缺',
+                            'D. 臺灣的勞動人口在未來十年將會大幅增加'
+                        ],
+                        answer: 1,
+                        explanation: 'Đoạn 1 sử dụng thành ngữ "首當其衝" để nhấn mạnh ngành dịch vụ và sản xuất truyền thống thâm dụng lao động là nhóm chịu ảnh hưởng đầu tiên của tình trạng thiếu hụt nhân công.'
+                    },
+                    {
+                        q: '2. 文中提到企業要提升「留才成效」，除了薪資外還需重視什麼？',
+                        options: [
+                            'A. 減少員工培訓課程以降低營運成本',
+                            'B. 友善的勞動環境與企業永續發展理念',
+                            'C. 限制中高齡員工重返職場的機會',
+                            'D. 全面取消彈性工時制度'
+                        ],
+                        answer: 1,
+                        explanation: 'Đoạn 3 nêu rõ mức độ thân thiện của môi trường làm việc và triết lý phát triển bền vững (永續發展) gắn bó mật thiết (息息相關) với hiệu quả giữ chân nhân tài.'
+                    }
+                ]
+            },
+            {
+                id: 'art3',
+                source: '公視新聞網 PTS 文化',
+                tag: '文化與城市',
+                title: '老屋新生與文化保存：在現代都市叢林中留住歷史溫度',
+                subtitle: 'Tái sinh nhà cổ và bảo tồn văn hóa: Giữ lại hơi ấm lịch sử giữa rừng bê tông đô thị hiện đại',
+                readTime: '4 分鐘',
+                paragraphs: [
+                    [
+                        { text: '隨著都市更新腳步加快，許多承載著地方記憶的老建築一度面臨拆除危機。然而，近年來臺灣各地興起一股「老屋新生」風潮，建築師與文化工作者為了在現代機能與歷史風貌之間取得平衡，可謂' },
+                        { text: '煞費苦心', zhuyin: 'ㄕㄚˋ ㄈㄟˋ ㄎㄨˇ ㄒㄧㄣ', pinyin: 'shà fèi kǔ xīn', highlight: true, meaning: 'Tốn bao tâm sức, vắt óc suy nghĩ kỹ lưỡng', usage: 'Ví dụ: 團隊為了保留原貌而煞費苦心。' },
+                        { text: '。' }
+                    ],
+                    [
+                        { text: '老屋活化並非單純將舊建築翻新，更需要結合在地社群需求' },
+                        { text: '從長計議', zhuyin: 'ㄘㄨㄥˊ ㄔㄤˊ ㄐㄧˋ ㄧˋ', pinyin: 'cóng cháng jì yì', highlight: true, meaning: 'Bàn bạc tính toán lâu dài, cân nhắc thận trọng', usage: 'Ví dụ: 文化保存需要結合社區需求從長計議。' },
+                        { text: '。無論是轉型為獨立書店、工藝展演空間，或是青年創業基地，這些空間都讓歷史文化不再只是博物館裡冰冷的展品，而是能與當代生活對話的活態遺產。' }
+                    ]
+                ],
+                questions: [
+                    {
+                        q: '1. 本文的主旨最接近下列何者？',
+                        options: [
+                            'A. 都市更新應該全面拆除老舊建築以興建現代大樓',
+                            'B. 老屋活化透過結合當代生活與在地需求，賦予歷史建築新生命',
+                            'C. 歷史文物只適合保存在大型國立博物館內',
+                            'D. 獨立書店是老屋唯一可行的商業經營模式'
+                        ],
+                        answer: 1,
+                        explanation: 'Toàn bài nhấn mạnh việc "老屋新生" (tái sinh nhà cổ) không chỉ là sửa mới mà kết hợp nhu cầu cộng đồng, biến di sản thành không gian sống động đối thoại với đời sống đương đại.'
+                    }
+                ]
+            }
+        ];
+
+        // 3. DỮ LIỆU LUYỆN NGHE TRÌNH ĐỘ C1
+        const LISTENING_DATA = [
+            {
+                id: 'lis1',
+                badge: '新聞專題 • Bản tin thời sự',
+                title: '臺灣半導體產業的綠色轉型與永續挑戰',
+                desc: 'Chuyển đổi xanh và thách thức phát triển bền vững của ngành bán dẫn Đài Loan.',
+                transcriptZh: '隨著全球氣候變遷加劇，各國紛紛訂定淨零碳排目標，臺灣作為全球半導體供應鏈的核心，其綠色轉型進程備受矚目。半導體製程高度仰賴穩定的電力與水資源，如何在維持產能優勢的同時，大幅提升再生能源使用比例，已成為科技大廠刻不容緩的課題。專家指出，企業除了積極採購綠電，更應從製程節能與水資源循環利用著手，唯有將永續發展內化為核心競爭力，才能在國際綠色供應鏈中立於不敗之地。',
+                transcriptVi: 'Cùng với biến đổi khí hậu toàn cầu gia tăng, các quốc gia lần lượt đặt ra mục tiêu phát thải ròng bằng 0. Đài Loan với vai trò hạt nhân chuỗi cung ứng bán dẫn toàn cầu, tiến trình chuyển đổi xanh đang rất được chú ý. Quy trình sản xuất bán dẫn phụ thuộc cao vào điện năng và nguồn nước ổn định; làm thế nào vừa duy trì ưu thế công suất vừa nâng cao tỷ lệ sử dụng năng lượng tái tạo đã trở thành bài toán cấp bách không thể chậm trễ của các tập đoàn công nghệ. Chuyên gia chỉ ra, ngoài việc tích cực mua điện xanh, doanh nghiệp cần bắt đầu từ tiết kiệm năng lượng trong quy trình sản xuất và tái tuần hoàn nguồn nước; chỉ khi nội tại hóa phát triển bền vững thành năng lực cạnh tranh cốt lõi mới có thể đứng vững trong chuỗi cung ứng xanh quốc tế.',
+                keywords: [
+                    { word: '淨零碳排', zhuyin: 'ㄐㄧㄥˋ ㄌㄧㄥˊ ㄊㄢˋ ㄆㄞˊ', meaning: 'Phát thải ròng bằng không (Net Zero)' },
+                    { word: '刻不容緩', zhuyin: 'ㄎㄜˋ ㄅㄨˋ ㄖㄨㄥˊ ㄏㄨㄢˇ', meaning: 'Cấp bách không thể chậm trễ dù chỉ một khắc' },
+                    { word: '立於不敗之地', zhuyin: 'ㄌㄧˋ ㄩˊ ㄅㄨˋ ㄅㄞˋ ㄓ ㄉㄧˋ', meaning: 'Đứng ở vị thế bất bại, vững vàng trước cạnh tranh' }
+                ],
+                questions: [
+                    {
+                        q: '1. 根據這則新聞報導，臺灣半導體產業目前面臨哪一項「刻不容緩」的課題？',
+                        options: [
+                            'A. 減少所有晶圓廠的生產規模以節省水電',
+                            'B. 在維持產能優勢的同時，提高再生能源的使用比例',
+                            'C. 將所有研發中心遷移至海外國家',
+                            'D. 停止與國際供應鏈進行技術合作'
+                        ],
+                        answer: 1,
+                        explanation: 'Bản tin nêu rõ: "如何在維持產能優勢的同時，大幅提升再生能源使用比例，已成為科技大廠刻不容緩的課題。"'
+                    },
+                    {
+                        q: '2. 專家建議科技企業應該如何落實綠色轉型？',
+                        options: [
+                            'A. 僅依靠購買碳權，無需改變現有製程',
+                            'B. 採購綠電並推動製程節能與水資源循環利用',
+                            'C. 暫緩所有環保投資直到技術完全免費',
+                            'D. 降低產品品質以減少能源消耗'
+                        ],
+                        answer: 1,
+                        explanation: 'Chuyên gia nhấn mạnh ngoài mua điện xanh (採購綠電), doanh nghiệp cần tiết kiệm năng lượng trong quy trình (製程節能) và tái tuần hoàn tài nguyên nước (水資源循環利用).'
+                    }
+                ]
+            },
+            {
+                id: 'lis2',
+                badge: '文化講座 • Diễn thuyết văn hóa',
+                title: '數位時代下的閱讀習慣變遷：深度閱讀為何依然不可或缺？',
+                desc: 'Sự biến đổi thói quen đọc thời số hóa: Vì sao đọc sâu vẫn không thể thiếu?',
+                transcriptZh: '現代人每天滑手機瀏覽大量短影音與即時快訊，碎片化閱讀雖然滿足了快速獲取資訊的需求，卻也讓我們逐漸失去長時間專注的能力。不少學者憂心，當人們習慣於淺嚐輒止的閱讀模式，邏輯推理與共情能力都會隨之退化。事實上，深度閱讀一本好書，就像是與作者進行一場跨越時空的深度對話，它能訓練大腦處理複雜論述，並在潛移默化中拓寬我們的生命視野。',
+                transcriptVi: 'Người hiện đại mỗi ngày lướt điện thoại xem lượng lớn video ngắn và tin nhanh; việc đọc phân mảnh tuy đáp ứng nhu cầu nắm bắt thông tin nhanh chóng, nhưng cũng khiến chúng ta dần đánh mất khả năng tập trung trong thời gian dài. Không ít học giả lo ngại, khi con người quen với mô hình đọc cưỡi ngựa xem hoa, năng lực suy luận logic và sự thấu cảm đều suy giảm theo. Thực tế, đọc sâu một cuốn sách hay giống như thực hiện cuộc đối thoại sâu sắc vượt không gian và thời gian với tác giả, giúp rèn luyện não bộ xử lý lập luận phức tạp và mở rộng tầm nhìn cuộc sống một cách âm thầm.',
+                keywords: [
+                    { word: '碎片化閱讀', zhuyin: 'ㄙㄨㄟˋ ㄆㄧㄢˋ ㄏㄨㄚˋ ㄩㄝˋ ㄉㄨˊ', meaning: 'Đọc phân mảnh (đọc lướt tin ngắn rời rạc)' },
+                    { word: '淺嚐輒止', zhuyin: 'ㄑㄧㄢˇ ㄔㄤˊ ㄓㄜˊ ㄓˇ', meaning: 'Nếm thử qua loa rồi dừng lại (học/đọc không sâu)' },
+                    { word: '不可或缺', zhuyin: 'ㄅㄨˋ ㄎㄜˇ ㄏㄨㄛˋ ㄑㄩㄝ', meaning: 'Không thể thiếu được' }
+                ],
+                questions: [
+                    {
+                        q: '1. 學者對於「碎片化閱讀」抱持什麼樣的擔憂？',
+                        options: [
+                            'A. 會導致智慧型手機的價格大幅上漲',
+                            'B. 可能使人的邏輯推理與共情能力逐漸退化',
+                            'C. 讓人們花費太多時間閱讀長篇學術論文',
+                            'D. 讓傳統書店的銷售量暴增'
+                        ],
+                        answer: 1,
+                        explanation: 'Bài diễn thuyết đề cập: "當人們習慣於淺嚐輒止的閱讀模式，邏輯推理與共情能力都會隨之退化。"'
+                    }
+                ]
+            }
+        ];
+
+        // 4. DỮ LIỆU NGỮ PHÁP CAO CẤP TOCFL C1 & ĐỀ BÀI ĐẶT CÂU
+        const GRAMMAR_DATA = [
+            {
+                pattern: '固然……，然而（/但）……',
+                zhuyin: 'ㄍㄨˋ ㄖㄢˊ ……，ㄖㄢˊ ㄦˊ ……',
+                meaning: 'Tuy rằng / Đành rằng (thừa nhận sự thật ở vế 1)..., nhưng mà / tuy nhiên (nhấn mạnh mặt đối lập hoặc trọng tâm ở vế 2)...',
+                register: '書面語 / 正式演講 (Văn viết / Diễn thuyết trang trọng)',
+                analysis: 'Dùng để nhượng bộ một sự thật hiển nhiên ở vế trước, sau đó chuyển ngoặt sang quan điểm cốt lõi mà người nói muốn nhấn mạnh. Mang sắc thái khách quan, học thuật hơn 「雖然……但是……」.',
+                exampleZh: '科技進步固然為人類帶來前所未有的便利，然而過度依賴數位工具也可能削弱人與人之間的真實互動。',
+                exampleVi: 'Tiến bộ công nghệ đành rằng mang lại sự tiện lợi chưa từng có cho nhân loại, tuy nhiên việc phụ thuộc quá mức vào công cụ số cũng có thể làm suy yếu tương tác chân thực giữa người với người.'
+            },
+            {
+                pattern: '鑒於……（，因此/故……）',
+                zhuyin: 'ㄐㄧㄢˋ ㄩˊ ……',
+                meaning: 'Xét thấy..., Căn cứ vào tình hình..., Trước thực trạng...',
+                register: '公文 / 新聞評論 / 學術論文 (Công văn / Bình luận báo chí / Luận văn)',
+                analysis: 'Đứng ở đầu câu để nêu lên bối cảnh, nguyên nhân hoặc căn cứ khách quan dẫn đến quyết định hoặc kiến nghị ở vế sau. Thường đi kèm với các cụm từ trang trọng.',
+                exampleZh: '鑒於全球極端氣候事件頻傳，各國政府紛紛加快推動再生能源轉型的腳步。',
+                exampleVi: 'Xét thấy các sự kiện khí hậu cực đoan toàn cầu xảy ra dồn dập, chính phủ các nước đồng loạt đẩy nhanh bước tiến chuyển dịch năng lượng tái tạo.'
+            },
+            {
+                pattern: '歸根結底（/歸根究柢）',
+                zhuyin: 'ㄍㄨㄟ ㄍㄣ ㄐㄧㄝˊ ㄉㄧˇ',
+                meaning: 'Suy cho cùng, xét đến tận cùng gốc rễ của vấn đề thì...',
+                register: '論說文 / 深度訪談 (Văn nghị luận / Phỏng vấn chuyên sâu)',
+                analysis: 'Dùng để tổng kết lại bản chất cốt lõi nhất sau khi đã phân tích nhiều hiện tượng bề mặt. Lưu ý chính tả phồn thể Đài Loan thường dùng 「歸根究柢」 hoặc 「歸根結底」.',
+                exampleZh: '許多社會衝突看似源於溝通誤解，但歸根結底，往往是資源分配不均所導致的結構性問題。',
+                exampleVi: 'Nhiều xung đột xã hội thoạt nhìn bắt nguồn từ hiểu lầm giao tiếp, nhưng suy cho cùng, thường là vấn đề mang tính cấu trúc do phân bổ nguồn lực không đồng đều gây ra.'
+            },
+            {
+                pattern: '毋庸置疑',
+                zhuyin: 'ㄨˊ ㄩㄥ ㄓˋ ㄧˊ',
+                meaning: 'Không còn nghi ngờ gì nữa, điều chắc chắn hiển nhiên (毋庸 = 不用).',
+                register: '書面語 / 正式評論 (Văn viết / Bình luận trang trọng)',
+                analysis: 'Có thể làm vị ngữ độc lập (這一點毋庸置疑) hoặc làm trạng ngữ ở đầu câu (毋庸置疑，……) để khẳng định tính xác thực tuyệt đối của một nhận định.',
+                exampleZh: '毋庸置疑，跨領域整合能力已成為未來職場人才不可或缺的核心優勢。',
+                exampleVi: 'Không còn nghi ngờ gì nữa, năng lực tích hợp liên ngành đã trở thành ưu thế cốt lõi không thể thiếu của nhân tài nơi công sở tương lai.'
+            },
+            {
+                pattern: '縱使……，亦（/仍）……',
+                zhuyin: 'ㄗㄨㄥˋ ㄕˇ ……，ㄧˋ ……',
+                meaning: 'Cho dù..., thì cũng vẫn...',
+                register: '高階書面語 (Văn viết cao cấp, trang nhã)',
+                analysis: 'Tương đương với 「即使……，也……」 nhưng mang âm hưởng cổ điển, trang trọng và giàu tính văn chương hơn. 「亦」 nghĩa là 「也」.',
+                exampleZh: '縱使前方挑戰重重，只要團隊秉持初心、團結一致，亦能克服萬難達成目標。',
+                exampleVi: 'Cho dù phía trước thử thách trùng trùng, chỉ cần đội ngũ giữ vững tâm nguyện ban đầu và đoàn kết nhất trí, thì cũng vẫn có thể vượt qua muôn vàn khó khăn để đạt mục tiêu.'
+            }
+        ];
+
+        const SENTENCE_PROMPTS = [
+            {
+                level: '書面語 • Nghị luận xã hội',
+                task: 'Hãy viết một câu nhận xét về mặt lợi và hại của trí tuệ nhân tạo (AI) đối với công việc, sử dụng cấu trúc và từ vựng dưới đây:',
+                required: ['固然', '然而', '未雨綢繆'],
+                sampleZh: '人工智慧固然大幅提升了企業的營運效率，然而傳統職務被取代的風險亦不容忽視，職場工作者必須及早未雨綢繆。',
+                sampleVi: 'Trí tuệ nhân tạo đành rằng nâng cao đáng kể hiệu suất vận hành của doanh nghiệp, tuy nhiên rủi ro các vị trí truyền thống bị thay thế cũng không thể xem nhẹ, người đi làm phải sớm lo xa chuẩn bị.',
+                note: 'Mẹo dùng từ: Chú ý vế sau 「固然」 thường đi với 「然而」 hoặc 「但」 để tạo sự tương phản mạch lạc.'
+            },
+            {
+                level: '新聞評論 • Bình luận kinh tế',
+                task: 'Hãy đặt một câu nêu lý do doanh nghiệp cần chú trọng bảo vệ môi trường, sử dụng mẫu ngữ pháp và từ vựng sau:',
+                required: ['鑒於', '息息相關'],
+                sampleZh: '鑒於氣候變遷與全球供應鏈的穩定息息相關，越來越多臺灣企業將減碳目標納入長期經營策略。',
+                sampleVi: 'Xét thấy biến đổi khí hậu gắn bó mật thiết với sự ổn định của chuỗi cung ứng toàn cầu, ngày càng nhiều doanh nghiệp Đài Loan đưa mục tiêu giảm phát thải carbon vào chiến lược kinh doanh dài hạn.',
+                note: 'Mẹo dùng từ: 「鑒於」 mở đầu mệnh đề nguyên nhân khách quan, rất hay xuất hiện trong phần Đọc hiểu báo chí TOCFL C1.'
+            },
+            {
+                level: '深度論述 • Lập luận chiều sâu',
+                task: 'Hãy đặt một câu đúc kết tầm quan trọng của việc rèn luyện tư duy phản biện, kết hợp cấu trúc và thành ngữ sau:',
+                required: ['歸根結底', '潛移默化'],
+                sampleZh: '培養孩子的獨立思考能力，歸根結底仍需仰賴家庭與學校教育長期潛移默化的引導。',
+                sampleVi: 'Bồi dưỡng năng lực tư duy độc lập cho trẻ, suy cho cùng vẫn cần dựa vào sự dẫn dắt âm thầm, mưa dầm thấm lâu từ giáo dục gia đình và nhà trường.',
+                note: 'Mẹo dùng từ: 「歸根結底」 thường đặt ở vế kết luận để nâng tầm lập luận lên mức bản chất.'
+            }
+        ];
+
+        // =====================================================================
+        // TRẠNG THÁI ỨNG DỤNG & QUẢN LÝ TIẾN ĐỘ (localStorage)
+        // =====================================================================
+        let state = {
+            activeTab: 'vocab',
+            vocabCategory: 'all',
+            vocabMode: 'grid',
+            flashcardIndex: 0,
+            masteredIds: JSON.parse(localStorage.getItem('tocfl_c1_mastered') || '[]'),
+            currentArticleId: 'art1',
+            showZhuyin: true,
+            currentPopupWord: null,
+            currentListeningId: 'lis1',
+            speechRate: 1.0,
+            isSpeaking: false,
+            currentPromptIndex: 0,
+            savedSentences: JSON.parse(localStorage.getItem('tocfl_c1_sentences') || '[]'),
+            selectedVoiceURI: ''
+        };
+
+        // =====================================================================
+        // HỆ THỐNG PHÁT ÂM GIỌNG ĐÀI LOAN (Web Speech API - zh-TW)
+        // =====================================================================
+        let twVoices = [];
+
+        function loadTaiwanVoices() {
+            if (!('speechSynthesis' in window)) return;
+            const voices = window.speechSynthesis.getVoices();
+            // Ưu tiên giọng zh-TW (Đài Loan), sau đó đến các giọng tiếng Trung khác nếu thiết bị chưa cài gói zh-TW
+            twVoices = voices.filter(v => v.lang.toLowerCase().includes('zh-tw') || v.name.includes('Taiwan') || v.name.includes('臺灣') || v.name.includes('台灣'));
+            if (twVoices.length === 0) {
+                twVoices = voices.filter(v => v.lang.toLowerCase().includes('zh'));
+            }
+
+            const select = document.getElementById('voice-select');
+            if (twVoices.length > 0) {
+                select.innerHTML = twVoices.map(v => `<option value="${v.voiceURI}">${v.name} (${v.lang})</option>`).join('');
+                state.selectedVoiceURI = twVoices[0].voiceURI;
+                select.onchange = (e) => { state.selectedVoiceURI = e.target.value; };
+            } else {
+                select.innerHTML = '<option value="">Mặc định (zh-TW)</option>';
+            }
+        }
+
+        if ('speechSynthesis' in window) {
+            loadTaiwanVoices();
+            window.speechSynthesis.onvoiceschanged = loadTaiwanVoices;
+        }
+
+        function speakText(text, rate = 1.0, onEndCallback = null) {
+            if (!('speechSynthesis' in window)) {
+                showToast('Trình duyệt của bạn không hỗ trợ đọc văn bản tự động.', 'warning');
+                return;
+            }
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-TW';
+            utterance.rate = rate;
+
+            if (state.selectedVoiceURI) {
+                const chosen = twVoices.find(v => v.voiceURI === state.selectedVoiceURI);
+                if (chosen) utterance.voice = chosen;
+            }
+
+            utterance.onend = () => {
+                state.isSpeaking = false;
+                updateWaveUI(false);
+                if (onEndCallback) onEndCallback();
+            };
+            utterance.onerror = () => {
+                state.isSpeaking = false;
+                updateWaveUI(false);
+            };
+
+            state.isSpeaking = true;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function testTaiwanVoice() {
+            speakText('你好，歡迎使用華語文流利級備考系統。', 1.0);
+            showToast('Đang phát thử giọng đọc tiếng Trung Đài Loan (zh-TW)');
+        }
+
+        // =====================================================================
+        // THÔNG BÁO NỔI (TOAST) & TIẾN ĐỘ HỌC TẬP
+        // =====================================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-700' : type === 'warning' ? 'bg-amber-700' : 'bg-qiyi-dark';
+            toast.className = `${bgClass} text-white text-xs sm:text-sm px-4 py-3 rounded-xl shadow-lg flex items-center gap-2.5 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function updateProgressUI() {
+            const total = VOCAB_DATA.length;
+            const mastered = state.masteredIds.length;
+            const pct = Math.round((mastered / total) * 100);
+            document.getElementById('progress-text').textContent = `${pct}% (${mastered}/${total} từ)`;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+            localStorage.setItem('tocfl_c1_mastered', JSON.stringify(state.masteredIds));
+        }
+
+        function toggleMastered(id) {
+            const idx = state.masteredIds.indexOf(id);
+            if (idx === -1) {
+                state.masteredIds.push(id);
+                showToast('Đã đánh dấu thuộc từ vựng C1 này!', 'success');
+            } else {
+                state.masteredIds.splice(idx, 1);
+            }
+            updateProgressUI();
+            renderVocabList();
+            updateFlashcardUI();
+        }
+
+        // =====================================================================
+        // ĐIỀU HƯỚNG TABS
+        // =====================================================================
+        function switchTab(tabName) {
+            window.speechSynthesis.cancel();
+            updateWaveUI(false);
+
+            state.activeTab = tabName;
+            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                btn.classList.remove('border-qiyi', 'text-qiyi', 'font-semibold');
+                btn.classList.add('border-transparent', 'text-slate-500', 'font-medium');
+            });
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            activeBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+            activeBtn.classList.add('border-qiyi', 'text-qiyi', 'font-semibold');
+        }
+
+        // =====================================================================
+        // LOGIC TAB 1: TỪ VỰNG, CỤM TỪ & THÀNH NGỮ C1
+        // =====================================================================
+        function getFilteredVocab() {
+            const query = document.getElementById('vocab-search').value.trim().toLowerCase();
+            return VOCAB_DATA.filter(item => {
+                const matchCat = state.vocabCategory === 'all' || item.category === state.vocabCategory;
+                const matchQuery = !query || 
+                    item.word.includes(query) || 
+                    item.pinyin.toLowerCase().includes(query) || 
+                    item.meaningVi.toLowerCase().includes(query) ||
+                    item.meaningZh.includes(query);
+                return matchCat && matchQuery;
+            });
+        }
+
+        function filterVocab(cat) {
+            state.vocabCategory = cat;
+            state.flashcardIndex = 0;
+            document.querySelectorAll('.vocab-filter-btn').forEach(btn => {
+                if (btn.dataset.cat === cat) {
+                    btn.className = 'vocab-filter-btn active px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-qiyi text-white transition';
+                } else {
+                    btn.className = 'vocab-filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-qiyi-soft text-qiyi-dark hover:bg-qiyi/15 transition';
+                }
+            });
+            renderVocabList();
+            updateFlashcardUI();
+        }
+
+        function setVocabMode(mode) {
+            state.vocabMode = mode;
+            const gridContainer = document.getElementById('vocab-grid-container');
+            const fcContainer = document.getElementById('vocab-flashcard-container');
+            const btnGrid = document.getElementById('btn-mode-grid');
+            const btnFc = document.getElementById('btn-mode-flashcard');
+
+            if (mode === 'grid') {
+                gridContainer.classList.remove('hidden');
+                fcContainer.classList.add('hidden');
+                btnGrid.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-qiyi shadow-sm transition';
+                btnFc.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-qiyi transition';
+            } else {
+                gridContainer.classList.add('hidden');
+                fcContainer.classList.remove('hidden');
+                btnFc.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-qiyi shadow-sm transition';
+                btnGrid.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-qiyi transition';
+                updateFlashcardUI();
+            }
+        }
+
+        function renderVocabList() {
+            const list = getFilteredVocab();
+            const container = document.getElementById('vocab-grid-container');
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="col-span-full bg-white rounded-2xl p-10 text-center text-slate-500 border border-slate-200">Không tìm thấy từ vựng hoặc thành ngữ phù hợp với bộ lọc hiện tại.</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map(item => {
+                const isMastered = state.masteredIds.includes(item.id);
+                return `
+                <article class="bg-white rounded-2xl border ${isMastered ? 'border-emerald-300 bg-emerald-50/15' : 'border-qiyi-border'} p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between gap-4">
+                    <div>
+                        <!-- Header thẻ từ -->
+                        <div class="flex items-start justify-between gap-3 mb-2">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2.5">
+                                    <h3 class="font-serif text-2xl sm:text-3xl font-bold text-ink tracking-wide">${item.word}</h3>
+                                    <button onclick="speakText('${item.word}')" class="w-8 h-8 rounded-full bg-qiyi-soft text-qiyi hover:bg-qiyi hover:text-white flex items-center justify-center text-xs transition" title="Phát âm từ">
+                                        <i class="fa-solid fa-volume-high"></i>
+                                    </button>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2 text-xs sm:text-sm mt-1">
+                                    <span class="font-medium text-qiyi">${item.zhuyin}</span>
+                                    <span class="text-slate-300">•</span>
+                                    <span class="text-slate-500">${item.pinyin}</span>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col items-end gap-1.5">
+                                <span class="px-2.5 py-0.5 rounded-md bg-qiyi-soft text-qiyi-dark text-xs font-semibold">${item.category}</span>
+                                <span class="text-[11px] text-slate-400">${item.pos}</span>
+                            </div>
+                        </div>
+
+                        <!-- Giải nghĩa -->
+                        <div class="space-y-1 mt-3 pt-3 border-t border-slate-100">
+                            <p class="text-sm sm:text-base font-semibold text-qiyi-dark">${item.meaningVi}</p>
+                            <p class="text-xs sm:text-sm text-slate-600">${item.meaningZh}</p>
+                        </div>
+
+                        <!-- Ngữ pháp / Cách dùng -->
+                        <div class="mt-3 text-xs bg-amber-50/70 text-amber-900 px-3 py-2 rounded-lg border border-amber-100/80">
+                            <span class="font-semibold">Cách dùng:</span> ${item.grammarNote}
+                        </div>
+
+                        <!-- Câu ví dụ -->
+                        <div class="mt-3 bg-slate-50 rounded-xl p-3.5 border border-slate-200/70 space-y-1">
+                            <div class="flex items-start justify-between gap-2">
+                                <p class="font-serif text-sm sm:text-base text-ink leading-relaxed">${item.exampleZh}</p>
+                                <button onclick="speakText('${item.exampleZh}')" class="text-qiyi hover:text-qiyi-dark p-1 shrink-0" title="Nghe câu ví dụ">
+                                    <i class="fa-solid fa-volume-low"></i>
+                                </button>
+                            </div>
+                            <p class="text-xs text-slate-500 italic">${item.exampleVi}</p>
+                        </div>
+                    </div>
+
+                    <!-- Footer thẻ -->
+                    <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                        <button onclick="toggleMastered('${item.id}')" class="text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition ${isMastered ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-qiyi-soft hover:text-qiyi'}">
+                            <i class="fa-solid ${isMastered ? 'fa-circle-check' : 'fa-circle'}"></i>
+                            ${isMastered ? 'Đã thuộc từ này' : 'Đánh dấu đã thuộc'}
+                        </button>
+                    </div>
+                </article>`;
+            }).join('');
+        }
+
+        // Flashcard Logic
+        function updateFlashcardUI() {
+            const list = getFilteredVocab();
+            if (list.length === 0) return;
+            if (state.flashcardIndex >= list.length) state.flashcardIndex = 0;
+
+            const item = list[state.flashcardIndex];
+            document.getElementById('fc-inner').classList.remove('rotate-y-180');
+            document.getElementById('fc-counter').textContent = `Thẻ ${state.flashcardIndex + 1} / ${list.length}`;
+            document.getElementById('fc-category').textContent = item.category;
+            document.getElementById('fc-word').textContent = item.word;
+            document.getElementById('fc-zhuyin').textContent = item.zhuyin;
+            document.getElementById('fc-pinyin').textContent = item.pinyin;
+
+            document.getElementById('fc-back-word').textContent = item.word;
+            document.getElementById('fc-pos').textContent = item.pos;
+            document.getElementById('fc-meaning-vi').textContent = item.meaningVi;
+            document.getElementById('fc-meaning-zh').textContent = item.meaningZh;
+            document.getElementById('fc-example-zh').textContent = item.exampleZh;
+            document.getElementById('fc-example-vi').textContent = item.exampleVi;
+
+            const isMastered = state.masteredIds.includes(item.id);
+            const masterBtn = document.getElementById('fc-master-btn');
+            if (isMastered) {
+                masterBtn.className = 'px-5 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-sm transition flex items-center gap-2';
+                masterBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Đã thuộc';
+            } else {
+                masterBtn.className = 'px-5 py-2.5 rounded-xl bg-qiyi-soft text-qiyi-dark border border-qiyi-border hover:bg-qiyi hover:text-white font-semibold text-sm transition flex items-center gap-2';
+                masterBtn.innerHTML = '<i class="fa-regular fa-circle-check"></i> Đánh dấu đã thuộc';
+            }
+        }
+
+        function flipFlashcard() {
+            document.getElementById('fc-inner').classList.toggle('rotate-y-180');
+        }
+
+        function nextFlashcard() {
+            const list = getFilteredVocab();
+            state.flashcardIndex = (state.flashcardIndex + 1) % list.length;
+            updateFlashcardUI();
+        }
+
+        function prevFlashcard() {
+            const list = getFilteredVocab();
+            state.flashcardIndex = (state.flashcardIndex - 1 + list.length) % list.length;
+            updateFlashcardUI();
+        }
+
+        function speakCurrentFlashcard() {
+            const list = getFilteredVocab();
+            if (list[state.flashcardIndex]) {
+                speakText(list[state.flashcardIndex].word);
+            }
+        }
+
+        function toggleCurrentFlashcardMastered() {
+            const list = getFilteredVocab();
+            if (list[state.flashcardIndex]) {
+                toggleMastered(list[state.flashcardIndex].id);
+            }
+        }
+
+        // =====================================================================
+        // LOGIC TAB 2: ĐỌC HIỂU VĂN BẢN & THỜI SỰ ĐÀI LOAN
+        // =====================================================================
+        function renderArticleSelector() {
+            const container = document.getElementById('article-selector');
+            container.innerHTML = ARTICLES_DATA.map(art => {
+                const isSelected = art.id === state.currentArticleId;
+                return `
+                <button onclick="selectArticle('${art.id}')" class="text-left p-4 rounded-2xl border transition flex flex-col justify-between gap-2 ${isSelected ? 'bg-qiyi text-white border-qiyi shadow-md' : 'bg-white text-ink border-qiyi-border hover:border-qiyi'}">
+                    <div class="flex items-center justify-between w-full text-xs">
+                        <span class="px-2 py-0.5 rounded font-semibold ${isSelected ? 'bg-white/20 text-white' : 'bg-qiyi-soft text-qiyi'}">${art.tag}</span>
+                        <span class="${isSelected ? 'text-teal-100' : 'text-slate-400'}">${art.source}</span>
+                    </div>
+                    <h4 class="font-serif font-bold text-sm sm:text-base line-clamp-2 leading-snug">${art.title}</h4>
+                </button>`;
+            }).join('');
+        }
+
+        function selectArticle(artId) {
+            window.speechSynthesis.cancel();
+            state.currentArticleId = artId;
+            renderArticleSelector();
+
+            const art = ARTICLES_DATA.find(a => a.id === artId);
+            document.getElementById('art-source').textContent = art.source;
+            document.getElementById('art-date').textContent = `${art.tag} • Thời gian đọc ~${art.readTime}`;
+            document.getElementById('art-title').textContent = art.title;
+            document.getElementById('art-subtitle').textContent = art.subtitle;
+            document.getElementById('art-vocab-popup').classList.add('hidden');
+
+            // Render nội dung bài báo kèm Ruby Zhuyin & Highlight từ vựng C1
+            const bodyEl = document.getElementById('art-body');
+            bodyEl.innerHTML = art.paragraphs.map(para => {
+                const htmlSegments = para.map((seg, idx) => {
+                    if (seg.highlight) {
+                        const chars = seg.text.split('');
+                        const zhuyins = seg.zhuyin.split(' ');
+                        const rubyHtml = chars.map((ch, i) => `<ruby>${ch}<rt>${zhuyins[i] || ''}</rt></ruby>`).join('');
+                        const dataAttr = encodeURIComponent(JSON.stringify(seg));
+                        return `<span class="c1-highlight" onclick="showArticleWordPopup(this, '${dataAttr}')">${rubyHtml}</span>`;
+                    }
+                    return `<span>${seg.text}</span>`;
+                }).join('');
+                return `<p class="indent-8">${htmlSegments}</p>`;
+            }).join('');
+
+            // Render câu hỏi đọc hiểu
+            const qContainer = document.getElementById('art-questions-container');
+            qContainer.innerHTML = art.questions.map((qItem, qIdx) => `
+                <div class="space-y-2.5 p-4 rounded-xl bg-slate-50 border border-slate-200/80" id="art-q-box-${qIdx}">
+                    <p class="font-serif font-bold text-sm sm:text-base text-ink leading-relaxed">${qItem.q}</p>
+                    <div class="space-y-2">
+                        ${qItem.options.map((opt, optIdx) => `
+                            <label class="flex items-start gap-2.5 p-2.5 rounded-lg bg-white border border-slate-200 hover:border-qiyi cursor-pointer text-xs sm:text-sm transition">
+                                <input type="radio" name="art-q-${qIdx}" value="${optIdx}" class="mt-1 accent-[#2C6E73]">
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="art-q-exp-${qIdx}" class="hidden text-xs p-3 rounded-lg mt-2"></div>
+                </div>
+            `).join('');
+        }
+
+        function toggleZhuyin() {
+            state.showZhuyin = !state.showZhuyin;
+            const bodyEl = document.getElementById('art-body');
+            const btn = document.getElementById('btn-toggle-zhuyin');
+            if (state.showZhuyin) {
+                bodyEl.classList.remove('hide-ruby');
+                btn.textContent = '注音: BẬT';
+                btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-qiyi text-white transition';
+            } else {
+                bodyEl.classList.add('hide-ruby');
+                btn.textContent = '注音: TẮT';
+                btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white border border-slate-300 text-slate-600 transition';
+            }
+        }
+
+        function showArticleWordPopup(el, encodedData) {
+            document.querySelectorAll('.c1-highlight').forEach(node => node.classList.remove('active'));
+            el.classList.add('active');
+
+            const data = JSON.parse(decodeURIComponent(encodedData));
+            state.currentPopupWord = data.text;
+
+            document.getElementById('pop-word').textContent = data.text;
+            document.getElementById('pop-zhuyin').textContent = data.zhuyin;
+            document.getElementById('pop-pinyin').textContent = data.pinyin;
+            document.getElementById('pop-meaning').textContent = data.meaning;
+            document.getElementById('pop-usage').textContent = data.usage;
+            document.getElementById('art-vocab-popup').classList.remove('hidden');
+
+            speakText(data.text);
+        }
+
+        function speakPopupWord() {
+            if (state.currentPopupWord) speakText(state.currentPopupWord);
+        }
+
+        function readArticleAloud() {
+            const art = ARTICLES_DATA.find(a => a.id === state.currentArticleId);
+            const fullText = art.title + '。' + art.paragraphs.map(p => p.map(s => s.text).join('')).join('。');
+            speakText(fullText, 0.95);
+            showToast('Đang đọc bài báo bằng giọng Đài Loan...');
+        }
+
+        function checkReadingAnswers() {
+            const art = ARTICLES_DATA.find(a => a.id === state.currentArticleId);
+            let correctCount = 0;
+
+            art.questions.forEach((qItem, qIdx) => {
+                const selected = document.querySelector(`input[name="art-q-${qIdx}"]:checked`);
+                const expEl = document.getElementById(`art-q-exp-${qIdx}`);
+                expEl.classList.remove('hidden');
+
+                if (!selected) {
+                    expEl.className = 'text-xs p-3 rounded-lg mt-2 bg-amber-50 text-amber-800 border border-amber-200';
+                    expEl.innerHTML = '<strong>Chưa chọn đáp án!</strong> Vui lòng chọn một phương án để xem giải thích.';
+                    return;
+                }
+
+                const val = parseInt(selected.value, 10);
+                if (val === qItem.answer) {
+                    correctCount++;
+                    expEl.className = 'text-xs p-3 rounded-lg mt-2 bg-emerald-50 text-emerald-900 border border-emerald-200';
+                    expEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i><strong>Chính xác!</strong> ${qItem.explanation}`;
+                } else {
+                    expEl.className = 'text-xs p-3 rounded-lg mt-2 bg-rose-50 text-rose-900 border border-rose-200';
+                    expEl.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 mr-1"></i><strong>Chưa chính xác.</strong> ${qItem.explanation}`;
+                }
+            });
+
+            showToast(`Bạn trả lời đúng ${correctCount}/${art.questions.length} câu hỏi đọc hiểu!`);
+        }
+
+        // =====================================================================
+        // LOGIC TAB 3: LUYỆN NGHE TRÌNH ĐỘ C1
+        // =====================================================================
+        function renderListeningSelector() {
+            const container = document.getElementById('listening-selector');
+            container.innerHTML = LISTENING_DATA.map(item => {
+                const isSelected = item.id === state.currentListeningId;
+                return `
+                <button onclick="selectListening('${item.id}')" class="text-left p-4 rounded-2xl border transition flex flex-col justify-between gap-2 ${isSelected ? 'bg-qiyi text-white border-qiyi shadow-md' : 'bg-white text-ink border-qiyi-border hover:border-qiyi'}">
+                    <span class="text-xs font-semibold px-2.5 py-0.5 rounded w-fit ${isSelected ? 'bg-white/20 text-white' : 'bg-qiyi-soft text-qiyi'}">${item.badge}</span>
+                    <h4 class="font-serif font-bold text-sm sm:text-base leading-snug">${item.title}</h4>
+                </button>`;
+            }).join('');
+        }
+
+        function selectListening(lisId) {
+            stopListening();
+            state.currentListeningId = lisId;
+            renderListeningSelector();
+
+            const item = LISTENING_DATA.find(l => l.id === lisId);
+            document.getElementById('lis-badge').textContent = item.badge;
+            document.getElementById('lis-title').textContent = item.title;
+            document.getElementById('lis-desc').textContent = item.desc;
+
+            // Ẩn transcript mặc định khi chuyển bài
+            document.getElementById('lis-transcript-box').classList.add('hidden');
+            document.getElementById('lis-transcript-placeholder').classList.remove('hidden');
+            document.getElementById('btn-toggle-transcript').innerHTML = '<i class="fa-regular fa-eye mr-1"></i> Hiện 逐字稿';
+            document.getElementById('lis-transcript-zh').textContent = item.transcriptZh;
+            document.getElementById('lis-transcript-vi').textContent = item.transcriptVi;
+
+            // Render từ khóa nghe hiểu
+            document.getElementById('lis-keywords').innerHTML = item.keywords.map(kw => `
+                <div class="bg-white p-3 rounded-xl border border-qiyi-border/70 flex items-center justify-between gap-2">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-serif font-bold text-sm text-qiyi-dark">${kw.word}</span>
+                            <span class="text-[11px] text-qiyi">${kw.zhuyin}</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mt-0.5">${kw.meaning}</p>
+                    </div>
+                    <button onclick="speakText('${kw.word}')" class="w-7 h-7 rounded-full bg-qiyi-soft text-qiyi hover:bg-qiyi hover:text-white flex items-center justify-center text-xs shrink-0 transition">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            // Render câu hỏi nghe hiểu
+            document.getElementById('lis-questions-container').innerHTML = item.questions.map((qItem, qIdx) => `
+                <div class="space-y-2.5 p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+                    <p class="font-serif font-bold text-sm sm:text-base text-ink leading-relaxed">${qItem.q}</p>
+                    <div class="space-y-2">
+                        ${qItem.options.map((opt, optIdx) => `
+                            <label class="flex items-start gap-2.5 p-2.5 rounded-lg bg-white border border-slate-200 hover:border-qiyi cursor-pointer text-xs sm:text-sm transition">
+                                <input type="radio" name="lis-q-${qIdx}" value="${optIdx}" class="mt-1 accent-[#2C6E73]">
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <div id="lis-q-exp-${qIdx}" class="hidden text-xs p-3 rounded-lg mt-2"></div>
+                </div>
+            `).join('');
+        }
+
+        function updateWaveUI(active) {
+            const wave = document.getElementById('audio-wave');
+            const playBtn = document.getElementById('btn-play-listening');
+            if (active) {
+                wave.classList.remove('hidden');
+                wave.classList.add('flex');
+                playBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            } else {
+                wave.classList.add('hidden');
+                wave.classList.remove('flex');
+                playBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            }
+        }
+
+        function togglePlayListening() {
+            if (state.isSpeaking) {
+                stopListening();
+            } else {
+                const item = LISTENING_DATA.find(l => l.id === state.currentListeningId);
+                updateWaveUI(true);
+                speakText(item.transcriptZh, state.speechRate, () => updateWaveUI(false));
+            }
+        }
+
+        function stopListening() {
+            window.speechSynthesis.cancel();
+            state.isSpeaking = false;
+            updateWaveUI(false);
+        }
+
+        function setSpeechRate(rate) {
+            state.speechRate = rate;
+            document.querySelectorAll('.rate-btn').forEach(btn => {
+                if (parseFloat(btn.dataset.rate) === rate) {
+                    btn.className = 'rate-btn active px-2.5 py-1.5 rounded-lg bg-white text-qiyi-dark font-bold transition';
+                } else {
+                    btn.className = 'rate-btn px-2.5 py-1.5 rounded-lg text-teal-100 hover:text-white transition';
+                }
+            });
+            if (state.isSpeaking) {
+                stopListening();
+                togglePlayListening();
+            }
+        }
+
+        function toggleTranscript() {
+            const box = document.getElementById('lis-transcript-box');
+            const placeholder = document.getElementById('lis-transcript-placeholder');
+            const btn = document.getElementById('btn-toggle-transcript');
+            const isHidden = box.classList.contains('hidden');
+
+            if (isHidden) {
+                box.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                btn.innerHTML = '<i class="fa-regular fa-eye-slash mr-1"></i> Ẩn 逐字稿';
+            } else {
+                box.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                btn.innerHTML = '<i class="fa-regular fa-eye mr-1"></i> Hiện 逐字稿';
+            }
+        }
+
+        function checkListeningAnswers() {
+            const item = LISTENING_DATA.find(l => l.id === state.currentListeningId);
+            let correctCount = 0;
+
+            item.questions.forEach((qItem, qIdx) => {
+                const selected = document.querySelector(`input[name="lis-q-${qIdx}"]:checked`);
+                const expEl = document.getElementById(`lis-q-exp-${qIdx}`);
+                expEl.classList.remove('hidden');
+
+                if (!selected) {
+                    expEl.className = 'text-xs p-3 rounded-lg mt-2 bg-amber-50 text-amber-800 border border-amber-200';
+                    expEl.innerHTML = '<strong>Chưa chọn đáp án!</strong> Vui lòng chọn một phương án.';
+                    return;
+                }
+
+                if (parseInt(selected.value, 10) === qItem.answer) {
+                    correctCount++;
+                    expEl.className = 'text-xs p-3 rounded-lg mt-2 bg-emerald-50 text-emerald-900 border border-emerald-200';
+                    expEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i><strong>Chính xác!</strong> ${qItem.explanation}`;
+                } else {
+                    expEl.className = 'text-xs p-3 rounded-lg mt-2 bg-rose-50 text-rose-900 border border-rose-200';
+                    expEl.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-600 mr-1"></i><strong>Chưa chính xác.</strong> ${qItem.explanation}`;
+                }
+            });
+
+            showToast(`Kết quả luyện nghe: Đúng ${correctCount}/${item.questions.length} câu!`);
+        }
+
+        // =====================================================================
+        // LOGIC TAB 4: PHÂN TÍCH NGỮ PHÁP & LUYỆN ĐẶT CÂU
+        // =====================================================================
+        function renderGrammarList() {
+            const container = document.getElementById('grammar-list-container');
+            container.innerHTML = GRAMMAR_DATA.map(g => `
+                <div class="bg-white rounded-2xl border border-qiyi-border p-5 sm:p-6 shadow-sm space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                        <div>
+                            <h3 class="font-serif text-xl sm:text-2xl font-bold text-qiyi-dark">${g.pattern}</h3>
+                            <span class="text-xs text-qiyi font-medium">${g.zhuyin}</span>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-qiyi-soft text-qiyi-dark text-xs font-semibold">${g.register}</span>
+                    </div>
+
+                    <p class="text-sm sm:text-base font-semibold text-ink">${g.meaning}</p>
+                    <p class="text-xs sm:text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/70">
+                        <strong class="text-qiyi-dark">Sắc thái & Ngữ dụng:</strong> ${g.analysis}
+                    </p>
+
+                    <div class="bg-qiyi-soft/40 rounded-xl p-3.5 border border-qiyi-border/60 space-y-1">
+                        <div class="flex items-start justify-between gap-2">
+                            <p class="font-serif text-sm sm:text-base text-ink leading-relaxed">${g.exampleZh}</p>
+                            <button onclick="speakText('${g.exampleZh}')" class="text-qiyi hover:text-qiyi-dark p-1 shrink-0" title="Nghe ví dụ">
+                                <i class="fa-solid fa-volume-high"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-slate-500 italic">${g.exampleVi}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderSentencePrompt() {
+            const p = SENTENCE_PROMPTS[state.currentPromptIndex];
+            document.getElementById('prompt-level').textContent = p.level;
+            document.getElementById('prompt-task').textContent = p.task;
+            document.getElementById('prompt-tags').innerHTML = p.required.map(tag => 
+                `<span class="px-2.5 py-1 rounded-lg bg-qiyi text-white font-serif text-sm font-bold">${tag}</span>`
+            ).join('');
+            document.getElementById('user-sentence-input').value = '';
+            document.getElementById('sentence-feedback-box').classList.add('hidden');
+        }
+
+        function nextSentencePrompt() {
+            state.currentPromptIndex = (state.currentPromptIndex + 1) % SENTENCE_PROMPTS.length;
+            renderSentencePrompt();
+        }
+
+        function evaluateUserSentence() {
+            const input = document.getElementById('user-sentence-input').value.trim();
+            const p = SENTENCE_PROMPTS[state.currentPromptIndex];
+            const feedbackBox = document.getElementById('sentence-feedback-box');
+            const statusEl = document.getElementById('sentence-check-status');
+
+            feedbackBox.classList.remove('hidden');
+            document.getElementById('prompt-sample-zh').textContent = p.sampleZh;
+            document.getElementById('prompt-sample-vi').textContent = p.sampleVi;
+            document.getElementById('prompt-note').textContent = p.note;
+
+            if (!input) {
+                statusEl.className = 'text-xs font-semibold text-amber-700';
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-info mr-1"></i>Bạn chưa nhập câu, dưới đây là câu mẫu tham khảo chuẩn C1:';
+                return;
+            }
+
+            const missing = p.required.filter(kw => !input.includes(kw));
+            if (missing.length === 0) {
+                statusEl.className = 'text-xs font-semibold text-emerald-700';
+                statusEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i>Tuyệt vời! Câu của bạn đã bao gồm đầy đủ các từ khóa/ngữ pháp yêu cầu. Đã lưu vào sổ tay!';
+                saveUserSentence(input);
+            } else {
+                statusEl.className = 'text-xs font-semibold text-amber-700';
+                statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i>Gợi ý: Câu của bạn còn thiếu từ khóa <strong class="font-serif underline">${missing.join('、')}</strong>. Hãy đối chiếu với câu mẫu bên dưới nhé!`;
+            }
+        }
+
+        function saveUserSentence(sentence) {
+            if (!state.savedSentences.includes(sentence)) {
+                state.savedSentences.unshift(sentence);
+                localStorage.setItem('tocfl_c1_sentences', JSON.stringify(state.savedSentences));
+                renderSavedSentences();
+            }
+        }
+
+        function renderSavedSentences() {
+            document.getElementById('saved-sentences-count').textContent = state.savedSentences.length;
+            const listEl = document.getElementById('saved-sentences-list');
+            if (state.savedSentences.length === 0) {
+                listEl.innerHTML = '<p class="text-slate-400 italic">Chưa có câu nào được lưu.</p>';
+                return;
+            }
+            listEl.innerHTML = state.savedSentences.map((s, idx) => `
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-start justify-between gap-2">
+                    <span class="font-serif text-ink leading-relaxed">${s}</span>
+                    <button onclick="speakText('${s}')" class="text-qiyi hover:text-qiyi-dark shrink-0" title="Nghe lại">
+                        <i class="fa-solid fa-volume-low"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function speakUserSentence() {
+            const val = document.getElementById('user-sentence-input').value.trim();
+            if (val) speakText(val);
+            else showToast('Vui lòng nhập câu tiếng Trung vào ô trước khi nghe thử.');
+        }
+
+        function speakSampleSentence() {
+            const p = SENTENCE_PROMPTS[state.currentPromptIndex];
+            speakText(p.sampleZh);
+        }
+
+        // =====================================================================
+        // KHỞI TẠO ỨNG DỤNG
+        // =====================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            updateProgressUI();
+            renderVocabList();
+            updateFlashcardUI();
+            renderArticleSelector();
+            selectArticle('art1');
+            renderListeningSelector();
+            selectListening('lis1');
+            renderGrammarList();
+            renderSentencePrompt();
+            renderSavedSentences();
+        });
+    </script>
+</body>
+</html>
